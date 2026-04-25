@@ -8,7 +8,7 @@
 
 **An autonomous AI security engineer that transforms raw Solidity source into a clean, evidence-grounded audit report in seconds — entirely free, entirely serverless.**
 
----
+
 
 ## The Problem
 
@@ -16,7 +16,7 @@ Modern Solidity static analyzers — Slither, Aderyn, Mythril — are powerful b
 
 This is **alert fatigue**, and it is the primary reason automated tooling fails to integrate into professional audit workflows. The signal is buried. The cost of reviewing every alert manually consumes the time that tooling was supposed to save.
 
----
+
 
 ## The Solution — How ASCSPipeline Works
 
@@ -33,42 +33,31 @@ RAG is not a feature — it is a correctness guarantee. By grounding the model's
 **3. Agentic LLM Evaluation**
 Groq's `llama-3.3-70b-versatile` model — operating under a strict `SecurityAuditor` persona with a temperature of `0.2` — receives the contract source, the filtered tool output, and the RAG context simultaneously. It triages findings, suppresses unactionable alerts, and synthesizes a structured Markdown report with severity, exploit scenario, and secure code fix for each confirmed vulnerability.
 
----
+
 
 ## Architecture
 
-```
-Solidity Source Input
-        │
-        ▼
-┌───────────────────────────────┐
-│   Deterministic Static Analysis│
-│   Slither (Trail of Bits)      │
-│   Aderyn  (Cyfrin, Rust)       │
-└───────────────┬───────────────┘
-                │  Raw findings (JSON)
-                ▼
-┌───────────────────────────────┐
-│   RAG Context Retrieval        │
-│   TF-IDF cosine similarity     │
-│   SWC Registry + DeFi corpus  │
-│   Top-4 vulnerability entries  │
-└───────────────┬───────────────┘
-                │  Grounding context
-                ▼
-┌───────────────────────────────┐
-│   Agentic LLM Evaluation       │
-│   Groq — llama-3.3-70b         │
-│   SecurityAuditor persona      │
-│   Temperature: 0.2             │
-└───────────────┬───────────────┘
-                │
-                ▼
-  Structured Markdown Audit Report
-  Severity · Exploit Path · Fix
+```mermaid
+flowchart TD
+    A(["Solidity Source Input"])
+    B["Deterministic Static Analysis\nSlither · Trail of Bits\nAderyn · Cyfrin Rust-native"]
+    C["RAG Context Retrieval\nTF-IDF · Cosine Similarity\nSWC Registry + DeFi Corpus\nTop-4 Vulnerability Entries"]
+    D["Agentic LLM Evaluation\nGroq · llama-3.3-70b-versatile\nSecurityAuditor Persona · Temp 0.2"]
+    E(["Structured Audit Report\nSeverity · Exploit Path · Secure Fix"])
+
+    A --> B
+    B -->|"Raw findings JSON"| C
+    C -->|"Grounding context"| D
+    D --> E
+
+    style A fill:#1a3a1a,stroke:#3fb950,stroke-width:2px,color:#e8edf5
+    style B fill:#0f1c2c,stroke:#58a6ff,stroke-width:2px,color:#e8edf5
+    style C fill:#1e1030,stroke:#c792ea,stroke-width:2px,color:#e8edf5
+    style D fill:#2a1e08,stroke:#e3a832,stroke-width:2px,color:#e8edf5
+    style E fill:#1a3a1a,stroke:#3fb950,stroke-width:2px,color:#e8edf5
 ```
 
----
+
 
 ## Tech Stack
 
@@ -85,7 +74,7 @@ Solidity Source Input
 
 **Total infrastructure cost: $0.**
 
----
+
 
 ## Prerequisites
 
@@ -93,7 +82,7 @@ Solidity Source Input
 - Git
 - A free [Groq API key](https://console.groq.com) — takes 60 seconds to obtain
 
----
+
 
 ## Local Installation
 
@@ -115,7 +104,7 @@ pip install -r requirements.txt
 > via `py-solc-x` and downloads the Aderyn Linux binary from GitHub Releases.
 > No manual binary management is required.
 
----
+
 
 ## Configuration
 
@@ -128,7 +117,7 @@ If you are deploying to **Streamlit Community Cloud** and want to pre-configure 
 GROQ_API_KEY = "gsk_your_key_here"
 ```
 
----
+
 
 ## Running Locally
 
@@ -145,7 +134,7 @@ The application opens at `http://localhost:8501`.
 3. Click **Run Analysis**
 4. Review the AI-augmented audit report — download as `.md` when complete
 
----
+
 
 ## Project Structure
 
@@ -168,7 +157,7 @@ ascspipeline/
     └── config.toml         # Theme and server configuration
 ```
 
----
+
 
 ## Deploying to Streamlit Community Cloud
 
@@ -182,7 +171,7 @@ ascspipeline/
 
 Streamlit Cloud installs `packages.txt` via `apt-get` and `requirements.txt` via `pip` automatically. The first cold start provisions `solc` and downloads the Aderyn binary — this takes approximately 60–90 seconds.
 
----
+
 
 ## How the RAG Engine Works
 
@@ -196,7 +185,7 @@ This approach was chosen deliberately over neural embedding models (`sentence-tr
 
 For a corpus of 16 hand-curated entries, lexical retrieval is semantically equivalent to neural retrieval. The content matches the query vocabulary precisely.
 
----
+
 
 ## Contributing
 
@@ -215,7 +204,7 @@ Pull requests are welcome. For significant changes, open an issue first to discu
 - Functions should be self-documenting — comment the *why*, not the *what*
 - All new modules must pass `python3 -m py_compile` before submission
 
----
+
 
 ## Disclaimer
 
@@ -223,7 +212,7 @@ ASCSPipeline is a supplementary automated security tool. It does not replace a p
 
 For professional audits, consider: [Cyfrin](https://cyfrin.io) · [Trail of Bits](https://trailofbits.com) · [Code4rena](https://code4rena.com)
 
----
+
 
 ## License
 
