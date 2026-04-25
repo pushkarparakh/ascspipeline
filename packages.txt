@@ -1,0 +1,19 @@
+# ============================================================
+# ASCSPipeline — System-Level Dependencies (apt packages)
+# Used by Streamlit Community Cloud during environment build.
+# These are standard Debian packages available without PPAs.
+# ============================================================
+
+# Required for building Python native extensions (FAISS, cryptography)
+build-essential
+libssl-dev
+libffi-dev
+
+# Git: Required by slither-analyzer for dependency resolution
+git
+
+# Curl: Used for binary downloads (Aderyn) in some fallback paths
+curl
+
+# File utility: Needed to detect binary types
+file
