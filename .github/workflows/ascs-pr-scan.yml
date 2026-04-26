@@ -1,0 +1,84 @@
+name: ASCS PR Security Scan
+
+on:
+  pull_request:
+    paths:
+      - "**/*.sol"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  securityScan:
+    name: Smart Contract Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install project dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Slither static analysis
+        id: slither
+        uses: crytic/slither-action@v0.4.2
+        with:
+          target: "."
+          slither-args: "--json slither-report.json --filter-paths node_modules,lib,test"
+          fail-on: none
+          sarif: none
+        continue-on-error: true
+
+      - name: Provision and run Aderyn
+        run: |
+          LATEST_JSON=$(curl -sf https://api.github.com/repos/Cyfrin/aderyn/releases/latest)
+
+          ASSET_URL=$(echo "$LATEST_JSON" | python3 - <<'PYEOF'
+          import sys, json
+          data = json.load(sys.stdin)
+          excluded = {"darwin", "apple", "windows", "win32", "arm64", "aarch64", "arm"}
+          for asset in data.get("assets", []):
+              name = asset["name"].lower()
+              if any(e in name for e in excluded):
+                  continue
+              if ("x86_64" in name or "amd64" in name) and name.endswith(".tar.gz"):
+                  print(asset["browser_download_url"])
+                  break
+          PYEOF
+          )
+
+          if [ -z "$ASSET_URL" ]; then
+            echo "Aderyn Linux x86_64 binary not found in release assets. Skipping."
+            exit 0
+          fi
+
+          curl -sL "$ASSET_URL" -o aderyn.tar.gz
+          tar -xzf aderyn.tar.gz
+
+          # Binary may land at root or inside a subdirectory
+          BINARY=$(find . -maxdepth 3 -type f -executable -name "aderyn" | head -1)
+
+          if [ -z "$BINARY" ]; then
+            echo "Aderyn binary not found after extraction. Skipping."
+            exit 0
+          fi
+
+          chmod +x "$BINARY"
+          "$BINARY" . --output aderyn-report.json || true
+        continue-on-error: true
+
+      - name: Run PR security agent
+        run: python prAgent.py
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
